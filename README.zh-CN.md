@@ -86,6 +86,7 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 
 |  | 论文检索（本 skill） | [AcademiCats 完整产品 →](https://academicats.com) |
 |---|:---:|:---:|
+| ⚡ **速度** | 几分钟（在你的 Claude 上实时跑） | **数秒** —— 优化管线 + 缓存 |
 | 真实论文、诚实精读 | ✅ | ✅ |
 | 学术数据库 | 5 个（免 key） | 14+，含 Google Scholar 与中文源 |
 | 文献库保存与历史 | — | ✅ |

@@ -49,14 +49,16 @@ except Exception:
 _CTX_UNVERIFIED = ssl._create_unverified_context()
 
 
-def _get(url, headers=None, retries=3):
+def _get(url, headers=None, retries=3, timeout=TIMEOUT):
     """GET with a short backoff retry on rate-limit / transient 5xx (fixes the
     common Semantic Scholar 429 when running key-free). Timeouts are NOT retried
-    (they're slow) — a dead source just drops and the others carry the search."""
+    (they're slow) — a dead source just drops and the others carry the search.
+    `timeout` is per-call so a flaky source (e.g. arXiv) can be capped lower and
+    not hold up the whole parallel search."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(req, timeout=TIMEOUT, context=_CTX) as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=_CTX) as resp:
                 return resp.read()
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504) and attempt < retries - 1:
@@ -67,7 +69,7 @@ def _get(url, headers=None, retries=3):
             raise
         except urllib.error.URLError as e:
             if isinstance(getattr(e, "reason", None), ssl.SSLError):
-                with urllib.request.urlopen(req, timeout=TIMEOUT, context=_CTX_UNVERIFIED) as resp:
+                with urllib.request.urlopen(req, timeout=timeout, context=_CTX_UNVERIFIED) as resp:
                     return resp.read()
             raise
 
@@ -148,7 +150,9 @@ def search_arxiv(q, limit):
     url = ("https://export.arxiv.org/api/query?search_query=all:" +
            urllib.parse.quote(q) + f"&start=0&max_results={min(limit, 40)}")
     ns = {"a": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
-    root = ET.fromstring(_get(url))
+    # arXiv's export API is the slow/flaky one — cap it so it can't stall the
+    # whole parallel search waiting out the full global timeout.
+    root = ET.fromstring(_get(url, timeout=8))
     out = []
     for e in root.findall("a:entry", ns):
         doi_el = e.find("arxiv:doi", ns)

@@ -86,6 +86,7 @@ Restart Claude Code so it loads the skill. From then on, just talk to Claude —
 
 |  | Paper Search (this skill) | [AcademiCats full product →](https://academicats.com) |
 |---|:---:|:---:|
+| ⚡ **Speed** | minutes (runs live on your Claude) | **seconds** — tuned pipeline + caching |
 | Real papers, honest reading | ✅ | ✅ |
 | Scholarly databases | 5 (key-free) | 14+ incl. Google Scholar & Chinese sources |
 | Saved libraries & history | — | ✅ |
