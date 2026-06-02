@@ -82,6 +82,8 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 
 重启 Claude Code 让它加载 skill。之后直接跟它说 —— *"找几篇关于…的最新论文"*、*"总结这篇 arXiv 论文…"* —— 它会**自动触发**，无需记任何命令。全程跑在你自己的 Claude 上，所有数据源免费、无需 API key。
 
+**用网页版 / 桌面版 Claude？** 下载 **[`paper-search.skill`](paper-search.skill)**，在 **Settings → Capabilities → Skills** 里上传，然后在任意对话里直接问即可。（检索与读 PDF 的脚本会在 Claude 自带的代码沙箱里运行。）
+
 <br>
 
 ## 💙 大家为什么喜欢它

@@ -82,6 +82,8 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 
 Restart Claude Code so it loads the skill. From then on, just talk to Claude — *"find recent papers on …"*, *"summarise this arXiv paper …"* — and it triggers itself. Everything runs on your own Claude; all data sources are free and need no API keys.
 
+**On Claude web or desktop instead?** Download **[`paper-search.skill`](paper-search.skill)** and upload it under **Settings → Capabilities → Skills** — then just ask in any chat. (Its search & PDF scripts run in Claude's built-in code sandbox.)
+
 <br>
 
 ## 💙 Why people like it
