@@ -60,20 +60,21 @@
 ## 🚀 60 秒上手
 
 ```bash
-# 1. 把 skill 放到 Claude Code 能发现的位置
-cp -r Cat_paper_search ~/.claude/skills/paper-search
+# 1. 安装到 Claude Code 的 skills 目录
+mkdir -p ~/.claude/skills
+git clone https://github.com/jy1529098645-gif/Cat_paper_search.git ~/.claude/skills/paper-search
 
-# 2. 一个小依赖（用于读 PDF）
-python -m pip install pypdf
+# 2. 装唯一的依赖（Python 3.8+，用于读 PDF）
+cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirements.txt
 ```
 
-然后直接跟 Claude 说：*"找几篇关于…的最新论文"*、*"总结这篇 arXiv 论文…"*。skill 会**自动触发**，无需记任何命令。全程跑在你自己的 Claude 上，所有数据源免费、无需 API key。
+重启 Claude Code 让它加载 skill。之后直接跟它说 —— *"找几篇关于…的最新论文"*、*"总结这篇 arXiv 论文…"* —— 它会**自动触发**，无需记任何命令。全程跑在你自己的 Claude 上，所有数据源免费、无需 API key。
 
 <br>
 
 ## 💙 大家为什么喜欢它
 
-|  | Paper Search（本 skill） | [AcademiCats 完整产品 →](https://academicats.com) |
+|  | 论文检索（本 skill） | [AcademiCats 完整产品 →](https://academicats.com) |
 |---|:---:|:---:|
 | 真实论文、诚实精读 | ✅ | ✅ |
 | 学术数据库 | 5 个（免 key） | 14+，含 Google Scholar 与中文源 |

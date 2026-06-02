@@ -60,14 +60,15 @@ Behind the scenes it runs a real search and hands back a ranked shortlist:
 ## 🚀 Get started in 60 seconds
 
 ```bash
-# 1. drop this skill where Claude Code can find it
-cp -r Cat_paper_search ~/.claude/skills/paper-search
+# 1. install into Claude Code's skills folder
+mkdir -p ~/.claude/skills
+git clone https://github.com/jy1529098645-gif/Cat_paper_search.git ~/.claude/skills/paper-search
 
-# 2. one tiny dependency (for reading PDFs)
-python -m pip install pypdf
+# 2. install the one dependency (Python 3.8+, for reading PDFs)
+cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirements.txt
 ```
 
-Then just talk to Claude: *"find recent papers on …"*, *"summarise this arXiv paper …"*. The skill triggers itself — no commands to memorize. Everything runs on your own Claude; all data sources are free and need no API keys.
+Restart Claude Code so it loads the skill. From then on, just talk to Claude — *"find recent papers on …"*, *"summarise this arXiv paper …"* — and it triggers itself. Everything runs on your own Claude; all data sources are free and need no API keys.
 
 <br>
 
