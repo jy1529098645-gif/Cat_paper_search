@@ -293,6 +293,55 @@ def rule_score(p, query, this_year=2026):
     return round(score, 2), sig
 
 
+# ---------------------------------------------------------- markdown render --
+def _doi_url(p):
+    d = (p.get("doi") or "").strip()
+    return f"https://doi.org/{d}" if d else None
+
+
+def render_markdown(papers, query):
+    """Fixed, self-contained Markdown so the result looks identical no matter
+    which model relays it. Each paper = a card with title, full metadata, an
+    abstract, and clickable links straight to the original / PDF / DOI."""
+    if not papers:
+        return f"## 🔎 No results for: {query}\n\nTry broader terms or fewer filters."
+    out = [f"## 🔎 {len(papers)} results for: {query}", ""]
+    for i, p in enumerate(papers, 1):
+        title = (p.get("title") or "Untitled").strip()
+        primary = _doi_url(p) or p.get("url") or p.get("pdf_url")
+        out.append(f"### {i}. [{title}]({primary})" if primary else f"### {i}. {title}")
+
+        authors = p.get("authors") or []
+        astr = ", ".join(authors[:4]) + (" et al." if len(authors) > 4 else "")
+        meta = [x for x in [
+            astr or None,
+            str(p["year"]) if p.get("year") else None,
+            f"*{p['venue']}*" if p.get("venue") else None,
+            f"cited by {p.get('citation_count', 0)}",
+            f"via {p.get('source', '')}",
+            "🟢 Open Access" if p.get("pdf_url") else "🔒 No free PDF",
+        ] if x]
+        out.append("  ".join(meta))
+
+        ab = re.sub(r"\s+", " ", (p.get("abstract") or "")).strip()
+        if ab:
+            out.append("")
+            out.append("> " + (ab[:300] + "…" if len(ab) > 300 else ab))
+
+        links = []
+        if p.get("url"):
+            links.append(f"[📄 Open paper]({p['url']})")
+        if p.get("pdf_url"):
+            links.append(f"[⬇ PDF]({p['pdf_url']})")
+        if _doi_url(p):
+            links.append(f"[🔗 DOI]({_doi_url(p)})")
+        if links:
+            out.append("")
+            out.append(" · ".join(links))
+        out.append("")
+    return "\n".join(out)
+
+
 # -------------------------------------------------------------------- main ---
 def main():
     ap = argparse.ArgumentParser()
@@ -305,6 +354,11 @@ def main():
     ap.add_argument("--brief", action="store_true",
                     help="Print a compact ranked table instead of full JSON "
                          "(easy to skim; omit for the full records incl. abstracts).")
+    ap.add_argument("--markdown", action="store_true",
+                    help="Print ready-to-show Markdown cards: title + full details "
+                         "+ clickable links to the original / PDF / DOI. This is the "
+                         "fixed user-facing format — identical no matter which model "
+                         "relays it.")
     args = ap.parse_args()
 
     requested = [s.strip() for s in args.sources.split(",") if s.strip()]
@@ -351,6 +405,10 @@ def main():
         note = ", ".join(f"{s} unavailable" for s in errors)
         sys.stderr.write(f"note: {len(errors)}/{len(chosen)} source(s) skipped "
                          f"({note}); results from the rest.\n")
+
+    if args.markdown:
+        print(render_markdown(papers, args.query))
+        return
 
     if args.brief:
         # Compact, skimmable table. rule_score is a keyword prior, not a verdict —

@@ -39,20 +39,34 @@ asks what the research says about something.
    Semantic Scholar, Europe PMC — deduped and rule-scored):
 
    ```bash
-   python scripts/search_papers.py "your query" --limit 40 --brief
-   # full JSON (with abstracts): drop --brief
-   # to restrict years:   --from-year 2021 --to-year 2026
-   # open-access only:     --open-access-only
-   # pick sources:         --sources openalex,crossref,arxiv,s2,europepmc
+   python scripts/search_papers.py "your query" --limit 40 --markdown
+   #   --markdown : ready-to-show result cards with clickable links (USE THIS to
+   #                present results — see the fixed format below)
+   #   --brief    : compact ranked table, for your own quick skim
+   #   (omit both): full JSON records with abstracts, for re-ranking / writing
+   # filters:  --from-year 2021 --to-year 2026  --open-access-only
+   # sources:  --sources openalex,crossref,arxiv,s2,europepmc
    ```
-   Use `--brief` for a skimmable ranked table; drop it to get the full JSON
-   records (with abstracts) when you need to re-rank or write from them.
-3. **Re-rank by research fit, not keyword overlap.** `rule_score` is only a
+3. **Present with the fixed `--markdown` format.** For any "find / list papers"
+   request, run `--markdown` and **show its output to the user as-is** — do not
+   restyle it. The script (not the model) produces the layout, so the result
+   looks identical no matter which model runs the skill. Each paper is rendered
+   as a card:
+
+   > ### 1. [Paper title](https://doi.org/…)  ← title links to the original
+   > Authors  ·  Year  ·  *Venue*  ·  cited by N  ·  via Source  ·  🟢 Open Access
+   > > abstract snippet…
+   > [📄 Open paper](url) · [⬇ PDF](pdf_url) · [🔗 DOI](https://doi.org/…)
+
+   Every card carries **clickable links that jump straight to the original paper,
+   its open-access PDF, and its DOI** — keep them intact.
+4. **Re-rank by research fit, not keyword overlap.** `rule_score` is only a
    keyword/recency/citation prior — the genuinely best-fit paper is often NOT
-   `papers[0]`. Apply the research-fit and adversarial-screening criteria in
-   `references/search.md`, drop off-target hits, and present a ranked list with a
-   one-line "why" per paper. Papers with a `pdf_url` are open-access and can be
-   deep-read next.
+   first. When the user wants a curated answer, judge fit per
+   `references/search.md`, drop off-target hits, and reorder — but still present
+   each kept paper as its `--markdown` card (title link + details + links), and
+   you may add a one-line "why" under a card. Papers with a `pdf_url` are
+   open-access and can be deep-read next.
 
 `s2` may rate-limit (HTTP 429) without a key and `arxiv` can be slow — fine, the
 script reports skipped sources on stderr and the rest carry the search. Full

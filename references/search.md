@@ -12,8 +12,12 @@ rule scoring; you handle query understanding and research-fit re-ranking.
    adversarial criteria below. The script's `rule_score` is a prior, not the
    verdict — your job is to judge *fit to the user's actual question*, not
    keyword overlap.
-4. **Present** → ranked list with a one-line "why" per paper, grouped by
-   direction when the user asked something broad.
+4. **Present** → use the script's fixed `--markdown` cards (title as a clickable
+   link to the original, full metadata, abstract, and links to the paper / PDF /
+   DOI). Show them as-is so the output is identical across models; keep every
+   link. Add at most a one-line "why" under a card, and group by direction when
+   the query was broad. (`--brief` is for your own internal skim; full JSON when
+   you need to re-rank or write from the records.)
 
 ---
 

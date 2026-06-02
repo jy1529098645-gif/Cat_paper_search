@@ -41,17 +41,18 @@
 
 > *"帮我找 2020 年以后关于 CRISPR 脱靶效应的论文，再精读最相关的那篇开放获取论文。"*
 
-它会真实地跑一次检索，给你一份排序好的候选清单：
+它会真实地跑一次检索，返回一组**结果卡片**——每张都带完整信息和可直接点开跳转原文的链接。卡片格式由工具固定生成，**换任何大模型跑都长一个样**：
 
-```
-# 6 papers for: CRISPR off-target effects
- #  year  cites  OA  score   title
- 1  2023    537  Y   56.4  Off-target effects in CRISPR/Cas9 gene editing
- 2  2020    451  Y   54.7  Latest Developed Strategies to Minimize the Off-Target Effects…
- 3  2026      0  -   46.0  Decoding the role of chromatin context in off-target effects…
- 4  2023      7  Y   45.5  Systematic identification of CRISPR off-target effects by CROss-seq
- …
-```
+---
+
+**1. [Off-target effects in CRISPR/Cas9 gene editing](https://doi.org/10.3389/fbioe.2023.1143157)**
+Congting Guo, Xiaoteng Ma, Fei Gao, Yuxuan Guo · 2023 · *Frontiers in Bioengineering and Biotechnology* · 被引 537 · 🟢 开放获取
+
+> Gene editing stands for the methods to precisely make changes to a specific nucleic acid sequence. With the recent development of the CRISPR/Cas9 system, gene editing has become efficient, convenient and programmable…
+
+[📄 打开原文](https://doi.org/10.3389/fbioe.2023.1143157) · [⬇ PDF](https://www.frontiersin.org/articles/10.3389/fbioe.2023.1143157/pdf) · [🔗 DOI](https://doi.org/10.3389/fbioe.2023.1143157)
+
+---
 
 ……随后打开那篇开放获取 PDF，把发现逐条标注页码读给你听 —— 完全基于论文自身的正文。
 

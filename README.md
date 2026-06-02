@@ -41,19 +41,20 @@ Just ask Claude, in plain language:
 
 > *"Find me papers since 2020 on CRISPR off-target effects, then deep-read the most relevant open-access one."*
 
-Behind the scenes it runs a real search and hands back a ranked shortlist:
+It runs a real search and hands back **result cards** — each with full details and links that jump straight to the paper. The cards look the same no matter which model runs the skill, because the format is fixed by the tool, not improvised:
 
-```
-# 6 papers for: CRISPR off-target effects
- #  year  cites  OA  score   title
- 1  2023    537  Y   56.4  Off-target effects in CRISPR/Cas9 gene editing
- 2  2020    451  Y   54.7  Latest Developed Strategies to Minimize the Off-Target Effects…
- 3  2026      0  -   46.0  Decoding the role of chromatin context in off-target effects…
- 4  2023      7  Y   45.5  Systematic identification of CRISPR off-target effects by CROss-seq
- …
-```
+---
 
-…then opens the open-access PDF and reads it back to you with findings tied to page numbers — grounded entirely in the paper's own text.
+**1. [Off-target effects in CRISPR/Cas9 gene editing](https://doi.org/10.3389/fbioe.2023.1143157)**
+Congting Guo, Xiaoteng Ma, Fei Gao, Yuxuan Guo · 2023 · *Frontiers in Bioengineering and Biotechnology* · cited by 537 · 🟢 Open Access
+
+> Gene editing stands for the methods to precisely make changes to a specific nucleic acid sequence. With the recent development of the CRISPR/Cas9 system, gene editing has become efficient, convenient and programmable…
+
+[📄 Open paper](https://doi.org/10.3389/fbioe.2023.1143157) · [⬇ PDF](https://www.frontiersin.org/articles/10.3389/fbioe.2023.1143157/pdf) · [🔗 DOI](https://doi.org/10.3389/fbioe.2023.1143157)
+
+---
+
+…then it opens the open-access PDF and reads it back to you with findings tied to page numbers — grounded entirely in the paper's own text.
 
 <br>
 
