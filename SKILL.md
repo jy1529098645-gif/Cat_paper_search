@@ -32,10 +32,29 @@ and reading reports are built only from the extracted PDF text.
 **When:** the user wants to find papers / prior work / sources on a topic, or
 asks what the research says about something.
 
-1. For a focused query, search directly. For a broad/exploratory one, first
+1. **Show the search setup first, and let the user choose.** Before searching,
+   present this compact menu — with sensible defaults pre-filled from what they
+   already said — then wait for their reply. It's plain text, so any model shows
+   it the same way:
+
+   > 🔍 **Search setup** — confirm or tweak, then I'll run it:
+   > 1. **Topic** — `<topic inferred from the user's request>`
+   > 2. **How many papers** — `20`  *(e.g. 10 / 20 / 40)*
+   > 3. **Years** — `any`  *(e.g. 2020–2026)*
+   > 4. **Open-access only** (only papers you can read in full) — `no`  *(yes / no)*
+   > 5. **Sort by** — `best match`  *(best match / newest / most cited / open access)*
+   >
+   > Reply with any changes (e.g. *"30 papers, since 2021, open access"*), or just say **go**.
+
+   Pre-fill any field the user already gave. If they clearly want speed ("just
+   search", or they specified everything up front), skip the wait and run it.
+   Map the choices to flags: how-many → `--limit`, years →
+   `--from-year` / `--to-year`, open-access → `--open-access-only`, sort → your
+   re-rank preference (step 5) plus `--open-access-only` for "open access".
+2. For a focused query, search directly. For a broad/exploratory one, first
    expand it into directions and search the best 2–4 query strings (see
    `references/search.md`, Stages 1–3).
-2. Run the retriever (5 keyless APIs in parallel — OpenAlex, Crossref, arXiv,
+3. Run the retriever (5 keyless APIs in parallel — OpenAlex, Crossref, arXiv,
    Semantic Scholar, Europe PMC — deduped and rule-scored):
 
    ```bash
@@ -47,7 +66,7 @@ asks what the research says about something.
    # filters:  --from-year 2021 --to-year 2026  --open-access-only
    # sources:  --sources openalex,crossref,arxiv,s2,europepmc
    ```
-3. **Present with the fixed `--markdown` format.** For any "find / list papers"
+4. **Present with the fixed `--markdown` format.** For any "find / list papers"
    request, run `--markdown` and **show its output to the user as-is** — do not
    restyle it. The script (not the model) produces the layout, so the result
    looks identical no matter which model runs the skill. Each paper is rendered
@@ -60,7 +79,7 @@ asks what the research says about something.
 
    Every card carries **clickable links that jump straight to the original paper,
    its open-access PDF, and its DOI** — keep them intact.
-4. **Re-rank by research fit, not keyword overlap.** `rule_score` is only a
+5. **Re-rank by research fit, not keyword overlap.** `rule_score` is only a
    keyword/recency/citation prior — the genuinely best-fit paper is often NOT
    first. When the user wants a curated answer, judge fit per
    `references/search.md`, drop off-target hits, and reorder — but still present

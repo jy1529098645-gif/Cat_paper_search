@@ -37,11 +37,22 @@
 
 ## 🎬 Demo
 
-Just ask Claude, in plain language:
+Ask in plain language:
 
-> *"Find me papers since 2020 on CRISPR off-target effects, then deep-read the most relevant open-access one."*
+> *"Find me papers on CRISPR off-target effects."*
 
-It runs a real search and hands back **result cards** — each with full details and links that jump straight to the paper. The cards look the same no matter which model runs the skill, because the format is fixed by the tool, not improvised:
+First it shows a quick **search setup** so you stay in control — same on any model:
+
+> 🔍 **Search setup** — confirm or tweak, then I'll run it:
+> 1. **Topic** — CRISPR off-target effects
+> 2. **How many papers** — 20  *(10 / 20 / 40)*
+> 3. **Years** — any  *(e.g. 2020–2026)*
+> 4. **Open-access only** — no  *(yes / no)*
+> 5. **Sort by** — best match  *(best match / newest / most cited / open access)*
+>
+> Reply with any changes, or just say **go**.
+
+Then it runs a real search and hands back **result cards** — each with full details and links that jump straight to the paper. The cards look the same no matter which model runs the skill, because the format is fixed by the tool, not improvised:
 
 ---
 

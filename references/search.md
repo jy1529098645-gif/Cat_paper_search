@@ -6,6 +6,11 @@ rule scoring; you handle query understanding and research-fit re-ranking.
 
 ## Pipeline
 
+0. **Confirm the search setup** → show the user the quick setup menu (topic /
+   how many / years / open-access-only / sort) with defaults pre-filled, and wait
+   for their reply or "go". See SKILL.md step 1 for the exact menu; map their
+   choices to the `--limit` / `--from-year` / `--to-year` / `--open-access-only`
+   flags. Skip the wait only if they clearly want speed.
 1. **Understand the query** → expand into directions/keywords (prompts below).
 2. **Retrieve** → run `search_papers.py` with the best query string(s).
 3. **Re-rank** → read the returned `papers[]` and apply the research-fit and
