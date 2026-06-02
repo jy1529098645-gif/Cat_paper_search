@@ -83,6 +83,21 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 | 据文献写作与自审 | — | ✅ Synthesis Lab + Paper Review |
 | 精致的网页与移动端 | — | ✅ |
 
+## 🐱 AcademiCats 技能家族
+
+三个开源 skill，串起一条完整的研究工作流——按需安装其一或全部：
+
+- 🔍 **论文检索** *（你在这里）* —— 找文献、读文献
+- ✍️ [文献写作台](https://github.com/jy1529098645-gif/Cat_synthesis_lab) —— 据你的文献写出有据成稿
+- 🧪 [模拟同行评审](https://github.com/jy1529098645-gif/Cat_paper_review) —— 对你自己的草稿做同行评审
+
+## 🙋 常见问题
+
+- **没触发？** 安装后重启 Claude Code，并把话说成一个任务 —— *"找几篇关于…的最新论文"*。
+- **某篇打不开？** 那是付费墙、没有免费副本——skill 会直说，而不是瞎编。换一篇，或直接粘 DOI / PDF 链接。
+- **用哪个模型？** 任何模型都能跑；用 Claude Sonnet 及以上效果最好。
+- **隐私 & 免费？** 全程跑在你自己的 Claude 上——无需账号、不向我们回传任何东西，检索只访问公开学术 API。
+
 <div align="center">
 <br>
 

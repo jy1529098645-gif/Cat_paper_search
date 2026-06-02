@@ -83,6 +83,21 @@ Restart Claude Code so it loads the skill. From then on, just talk to Claude —
 | Write & self-review from your sources | — | ✅ Synthesis Lab + Paper Review |
 | Polished web & mobile app | — | ✅ |
 
+## 🐱 The AcademiCats skill family
+
+Three open skills that chain into one research workflow — install any or all:
+
+- 🔍 **Paper Search** *(you are here)* — find & read papers
+- ✍️ [Synthesis Lab](https://github.com/jy1529098645-gif/Cat_synthesis_lab) — write grounded papers from your sources
+- 🧪 [Paper Review](https://github.com/jy1529098645-gif/Cat_paper_review) — peer-review your own draft
+
+## 🙋 FAQ
+
+- **It didn't trigger?** Restart Claude Code after installing, and phrase your message as a task — *"find recent papers on …"*.
+- **A paper won't open?** It's paywalled with no free copy — the skill says so instead of guessing. Try another result, or paste a DOI / PDF link.
+- **Which model?** Any model works; quality is best on Claude Sonnet or above.
+- **Private & free?** It runs on your own Claude — no account, nothing sent to us. Searches only hit public scholarly APIs.
+
 <div align="center">
 <br>
 
