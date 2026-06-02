@@ -2,8 +2,8 @@
 """
 fetch_pdf.py — Resolve an open-access PDF for a paper and extract its text.
 
-Implements the production OA-resolution fallback chain: try any direct PDF
-URL, then arXiv-by-DOI, Unpaywall, OpenAlex, and Semantic Scholar in turn.
+Resolves an open-access PDF via a fallback chain: try any direct PDF URL,
+then arXiv-by-DOI, Unpaywall, OpenAlex, and Semantic Scholar in turn.
 Downloads the first real PDF (validated by the %PDF magic bytes), extracts
 page text with pypdf, and emits JSON that Claude reads to produce a deep-read
 report (see references/deep_read.md).
@@ -32,8 +32,8 @@ import urllib.request
 
 USER_AGENT = "academi-skill/1.0 (mailto:hello@example.com)"
 TIMEOUT = 25
-MAX_PAGES = 8         # production default: first 8 pages fed to the model
-MAX_CHARS = 24000     # production cap on text handed to the LLM
+MAX_PAGES = 8         # default: read the first 8 pages with text
+MAX_CHARS = 24000     # cap on how much text to hand back for analysis
 
 # Fall back to an unverified TLS context on machines with a broken CA store
 # (common on Windows) — all requests here are public read-only GETs.

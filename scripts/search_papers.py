@@ -241,9 +241,9 @@ def dedup(papers):
 
 
 # -------------------------------------------------------------- scoring ------
-# Transparent rule-based relevance. Mirrors the production "evidence strength"
-# signals (title/abstract hits, exact phrase, coverage, recency, citations).
-# Claude refines this with research-fit judgement downstream — see references/search.md.
+# Transparent rule-based relevance prior from simple signals: title/abstract
+# hits, exact phrase, query coverage, recency, and citations. This is only a
+# prior — Claude re-ranks by research fit downstream (see references/search.md).
 def rule_score(p, query, this_year=2026):
     q = query.lower()
     tokens = [t for t in re.findall(r"[a-z0-9]+", q) if len(t) > 2]
