@@ -1,0 +1,3 @@
+# search_papers.py needs nothing beyond the Python standard library.
+# fetch_pdf.py needs pypdf for text extraction:
+pypdf>=4.0

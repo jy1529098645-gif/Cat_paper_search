@@ -1,0 +1,361 @@
+#!/usr/bin/env python3
+"""
+search_papers.py — Multi-source academic paper retrieval (keyless).
+
+Queries several free, key-free scholarly APIs in parallel, normalises the
+results into one schema, de-duplicates, and applies a transparent rule-based
+relevance score. The heavy "research-fit" judgement (LLM rerank + adversarial
+screening) is left to Claude, which reads this script's JSON output and
+re-ranks per the criteria in references/search.md.
+
+Sources (all keyless): OpenAlex, Crossref, arXiv, Semantic Scholar, Europe PMC.
+
+Usage:
+    python search_papers.py "your query" [--limit 40] [--from-year 2018]
+                            [--to-year 2026] [--open-access-only]
+                            [--sources openalex,crossref,arxiv,s2,europepmc]
+
+Output: JSON to stdout -> {"query":..., "count":..., "papers":[ ... ]}
+Each paper: title, authors[], year, abstract, doi, url, pdf_url,
+            citation_count, venue, source, rule_score, rule_signals{}.
+
+Pure standard library — no pip install required.
+"""
+import argparse
+import concurrent.futures as cf
+import json
+import math
+import re
+import sys
+import ssl
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+
+USER_AGENT = "academi-skill/1.0 (https://github.com/; mailto:hello@example.com)"
+TIMEOUT = 20
+
+# Some machines (notably Windows) ship a broken/empty CA store, which makes
+# every HTTPS call to these public read-only APIs fail with CERTIFICATE_VERIFY_
+# FAILED. Try verified first; fall back to an unverified context so the skill
+# still works. These are all public GET requests, so the fallback is low-risk.
+try:
+    import certifi
+    _CTX = ssl.create_default_context(cafile=certifi.where())
+except Exception:
+    _CTX = ssl.create_default_context()
+_CTX_UNVERIFIED = ssl._create_unverified_context()
+
+
+def _get(url, headers=None):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT, context=_CTX) as resp:
+            return resp.read()
+    except urllib.error.URLError as e:
+        if isinstance(getattr(e, "reason", None), ssl.SSLError):
+            with urllib.request.urlopen(req, timeout=TIMEOUT, context=_CTX_UNVERIFIED) as resp:
+                return resp.read()
+        raise
+
+
+def _get_json(url, headers=None):
+    return json.loads(_get(url, headers).decode("utf-8", "replace"))
+
+
+def _norm_year(v):
+    if v is None:
+        return None
+    m = re.search(r"(\d{4})", str(v))
+    return int(m.group(1)) if m else None
+
+
+def _clean(s):
+    return re.sub(r"\s+", " ", (s or "")).strip()
+
+
+# ---------------------------------------------------------------- sources ----
+def search_openalex(q, limit):
+    url = ("https://api.openalex.org/works?search=" + urllib.parse.quote(q) +
+           f"&per_page={min(limit, 50)}&mailto=hello@example.com")
+    out = []
+    for w in _get_json(url).get("results", []):
+        # OpenAlex stores abstracts as an inverted index; rebuild it.
+        abstract = ""
+        inv = w.get("abstract_inverted_index")
+        if inv:
+            positions = {}
+            for word, idxs in inv.items():
+                for i in idxs:
+                    positions[i] = word
+            abstract = " ".join(positions[i] for i in sorted(positions))
+        oa = (w.get("best_oa_location") or w.get("primary_location") or {})
+        out.append({
+            "title": _clean(w.get("title")),
+            "authors": [a["author"]["display_name"] for a in w.get("authorships", [])
+                        if a.get("author")],
+            "year": w.get("publication_year"),
+            "abstract": _clean(abstract),
+            "doi": (w.get("doi") or "").replace("https://doi.org/", "") or None,
+            "url": w.get("id"),
+            "pdf_url": oa.get("pdf_url"),
+            "citation_count": w.get("cited_by_count", 0),
+            "venue": _clean((w.get("primary_location") or {}).get("source", {}).get("display_name")
+                            if (w.get("primary_location") or {}).get("source") else ""),
+            "source": "OpenAlex",
+        })
+    return out
+
+
+def search_crossref(q, limit):
+    url = ("https://api.crossref.org/works?query=" + urllib.parse.quote(q) +
+           f"&rows={min(limit, 40)}&select=title,author,issued,DOI,URL,abstract,"
+           "container-title,is-referenced-by-count")
+    out = []
+    for w in _get_json(url).get("message", {}).get("items", []):
+        abstract = re.sub(r"<[^>]+>", "", w.get("abstract", "") or "")
+        issued = (((w.get("issued") or {}).get("date-parts") or [[None]])[0] or [None])[0]
+        out.append({
+            "title": _clean(" ".join(w.get("title", [])) or ""),
+            "authors": [_clean(f"{a.get('given','')} {a.get('family','')}")
+                        for a in w.get("author", [])],
+            "year": _norm_year(issued),
+            "abstract": _clean(abstract),
+            "doi": w.get("DOI"),
+            "url": w.get("URL"),
+            "pdf_url": None,
+            "citation_count": w.get("is-referenced-by-count", 0),
+            "venue": _clean(" ".join(w.get("container-title", []) or [])),
+            "source": "Crossref",
+        })
+    return out
+
+
+def search_arxiv(q, limit):
+    url = ("https://export.arxiv.org/api/query?search_query=all:" +
+           urllib.parse.quote(q) + f"&start=0&max_results={min(limit, 40)}")
+    ns = {"a": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
+    root = ET.fromstring(_get(url))
+    out = []
+    for e in root.findall("a:entry", ns):
+        doi_el = e.find("arxiv:doi", ns)
+        pdf = None
+        for link in e.findall("a:link", ns):
+            if link.get("title") == "pdf":
+                pdf = link.get("href")
+        out.append({
+            "title": _clean((e.findtext("a:title", "", ns))),
+            "authors": [_clean(a.findtext("a:name", "", ns)) for a in e.findall("a:author", ns)],
+            "year": _norm_year(e.findtext("a:published", "", ns)),
+            "abstract": _clean(e.findtext("a:summary", "", ns)),
+            "doi": doi_el.text if doi_el is not None else None,
+            "url": e.findtext("a:id", "", ns),
+            "pdf_url": pdf,
+            "citation_count": 0,
+            "venue": "arXiv",
+            "source": "arXiv",
+        })
+    return out
+
+
+def search_s2(q, limit):
+    fields = "title,abstract,year,authors,externalIds,openAccessPdf,citationCount,venue,url"
+    url = ("https://api.semanticscholar.org/graph/v1/paper/search?query=" +
+           urllib.parse.quote(q) + f"&limit={min(limit, 40)}&fields={fields}")
+    out = []
+    for w in _get_json(url).get("data", []) or []:
+        ext = w.get("externalIds") or {}
+        out.append({
+            "title": _clean(w.get("title")),
+            "authors": [a.get("name", "") for a in w.get("authors", [])],
+            "year": w.get("year"),
+            "abstract": _clean(w.get("abstract")),
+            "doi": ext.get("DOI"),
+            "url": w.get("url"),
+            "pdf_url": (w.get("openAccessPdf") or {}).get("url"),
+            "citation_count": w.get("citationCount", 0),
+            "venue": _clean(w.get("venue")),
+            "source": "SemanticScholar",
+        })
+    return out
+
+
+def search_europepmc(q, limit):
+    url = ("https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=" +
+           urllib.parse.quote(q) + f"&format=json&pageSize={min(limit, 40)}&resultType=core")
+    out = []
+    for w in _get_json(url).get("resultList", {}).get("result", []):
+        pdf = None
+        for ft in (w.get("fullTextUrlList", {}) or {}).get("fullTextUrl", []):
+            if ft.get("documentStyle") == "pdf":
+                pdf = ft.get("url")
+        out.append({
+            "title": _clean(w.get("title")),
+            "authors": [a.get("fullName", "") for a in
+                        (w.get("authorList", {}) or {}).get("author", [])],
+            "year": _norm_year(w.get("pubYear")),
+            "abstract": _clean(w.get("abstractText")),
+            "doi": w.get("doi"),
+            "url": (f"https://doi.org/{w['doi']}" if w.get("doi")
+                    else f"https://europepmc.org/article/{w.get('source')}/{w.get('id')}"),
+            "pdf_url": pdf,
+            "citation_count": w.get("citedByCount", 0),
+            "venue": _clean(w.get("journalTitle")),
+            "source": "EuropePMC",
+        })
+    return out
+
+
+SOURCES = {
+    "openalex": search_openalex,
+    "crossref": search_crossref,
+    "arxiv": search_arxiv,
+    "s2": search_s2,
+    "europepmc": search_europepmc,
+}
+
+
+# ----------------------------------------------------------------- dedup -----
+def _dedup_key(p):
+    if p.get("doi"):
+        return ("doi", p["doi"].lower().strip())
+    t = re.sub(r"[^a-z0-9]", "", (p.get("title") or "").lower())
+    return ("title", t[:80])
+
+
+def dedup(papers):
+    best = {}
+    for p in papers:
+        k = _dedup_key(p)
+        if k not in best:
+            best[k] = p
+        else:
+            # Merge: keep the record with abstract / pdf / more citations.
+            cur = best[k]
+            if not cur.get("abstract") and p.get("abstract"):
+                cur["abstract"] = p["abstract"]
+            if not cur.get("pdf_url") and p.get("pdf_url"):
+                cur["pdf_url"] = p["pdf_url"]
+            cur["citation_count"] = max(cur.get("citation_count", 0), p.get("citation_count", 0))
+    return list(best.values())
+
+
+# -------------------------------------------------------------- scoring ------
+# Transparent rule-based relevance. Mirrors the production "evidence strength"
+# signals (title/abstract hits, exact phrase, coverage, recency, citations).
+# Claude refines this with research-fit judgement downstream — see references/search.md.
+def rule_score(p, query, this_year=2026):
+    q = query.lower()
+    tokens = [t for t in re.findall(r"[a-z0-9]+", q) if len(t) > 2]
+    title = (p.get("title") or "").lower()
+    abstract = (p.get("abstract") or "").lower()
+    sig = {}
+
+    title_hits = sum(1 for t in set(tokens) if t in title)
+    abs_hits = sum(1 for t in set(tokens) if t in abstract)
+    sig["title_hits"] = title_hits
+    sig["abstract_hits"] = abs_hits
+
+    score = title_hits * 4 + abs_hits * 1.5
+    if q and q in title:
+        score += 5
+        sig["exact_phrase_in_title"] = True
+    elif q and q in abstract:
+        score += 3
+        sig["exact_phrase_in_abstract"] = True
+
+    coverage = (len([t for t in set(tokens) if t in title or t in abstract]) /
+                max(1, len(set(tokens))))
+    score += coverage * 12
+    sig["token_coverage"] = round(coverage, 2)
+
+    if abstract:
+        score += 2
+        sig["has_abstract"] = True
+    else:
+        sig["has_abstract"] = False
+
+    year = p.get("year")
+    if year:
+        recency = max(0.0, 10.0 - (this_year - year) * 0.55)
+        score += recency
+        sig["recency_bonus"] = round(recency, 1)
+
+    cites = p.get("citation_count", 0) or 0
+    cite_bonus = min(12.0, math.log1p(cites) * 2.0)
+    score += cite_bonus
+    sig["citation_bonus"] = round(cite_bonus, 1)
+
+    return round(score, 2), sig
+
+
+# -------------------------------------------------------------------- main ---
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("query")
+    ap.add_argument("--limit", type=int, default=40)
+    ap.add_argument("--from-year", type=int, default=None)
+    ap.add_argument("--to-year", type=int, default=None)
+    ap.add_argument("--open-access-only", action="store_true")
+    ap.add_argument("--sources", default="openalex,crossref,arxiv,s2,europepmc")
+    ap.add_argument("--brief", action="store_true",
+                    help="Print a compact ranked table instead of full JSON "
+                         "(easy to skim; omit for the full records incl. abstracts).")
+    args = ap.parse_args()
+
+    chosen = [s.strip() for s in args.sources.split(",") if s.strip() in SOURCES]
+    per_source = max(10, args.limit)
+    errors = {}
+    collected = []
+    with cf.ThreadPoolExecutor(max_workers=len(chosen) or 1) as ex:
+        futs = {ex.submit(SOURCES[s], args.query, per_source): s for s in chosen}
+        for fut in cf.as_completed(futs):
+            s = futs[fut]
+            try:
+                collected.extend(fut.result())
+            except Exception as e:  # one dead source must not kill the search
+                errors[s] = f"{type(e).__name__}: {e}"
+
+    papers = dedup([p for p in collected if p.get("title")])
+
+    if args.from_year:
+        papers = [p for p in papers if (p.get("year") or 0) >= args.from_year]
+    if args.to_year:
+        papers = [p for p in papers if (p.get("year") or 9999) <= args.to_year]
+    if args.open_access_only:
+        papers = [p for p in papers if p.get("pdf_url")]
+
+    for p in papers:
+        p["rule_score"], p["rule_signals"] = rule_score(p, args.query)
+    papers.sort(key=lambda p: p["rule_score"], reverse=True)
+    papers = papers[:args.limit]
+
+    if errors:
+        note = ", ".join(f"{s} unavailable" for s in errors)
+        sys.stderr.write(f"note: {len(errors)}/{len(chosen)} source(s) skipped "
+                         f"({note}); results from the rest.\n")
+
+    if args.brief:
+        # Compact, skimmable table. rule_score is a keyword prior, not a verdict —
+        # the genuinely best-fit paper may sit lower; re-rank by research fit.
+        print(f"# {len(papers)} papers for: {args.query}")
+        print(f"{'#':>2}  {'year':>4}  {'cites':>5}  OA  score   title")
+        for i, p in enumerate(papers, 1):
+            oa = "Y" if p.get("pdf_url") else "-"
+            title = (p.get("title") or "")[:70]
+            print(f"{i:>2}  {str(p.get('year') or '?'):>4}  "
+                  f"{p.get('citation_count', 0):>5}  {oa}  {p['rule_score']:>5.1f}  {title}")
+        print("\n(rule_score = keyword/recency/citation prior, NOT final relevance — re-rank by fit.)")
+        return
+
+    json.dump({
+        "query": args.query,
+        "count": len(papers),
+        "source_errors": errors,
+        "papers": papers,
+    }, sys.stdout, ensure_ascii=False, indent=2)
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()
