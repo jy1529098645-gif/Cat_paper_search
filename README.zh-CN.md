@@ -2,7 +2,7 @@
 
 [English](README.md) · **中文**
 
-<img src="assets/cover.png" alt="AcademiCats · Paper Search" width="100%">
+<img src="assets/cover-zh.png" alt="AcademiCats · Paper Search" width="100%">
 
 <br>
 
@@ -90,6 +90,8 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 - 🔍 **论文检索** *（你在这里）* —— 找文献、读文献
 - ✍️ [文献写作台](https://github.com/jy1529098645-gif/Cat_synthesis_lab) —— 据你的文献写出有据成稿
 - 🧪 [模拟同行评审](https://github.com/jy1529098645-gif/Cat_paper_review) —— 对你自己的草稿做同行评审
+
+**一次装齐三个** —— clone 任意一个仓库后运行 `bash install.sh`。
 
 ## 🙋 常见问题
 
