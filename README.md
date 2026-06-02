@@ -6,11 +6,9 @@
 
 <br>
 
-# 🐱 Paper Search · 论文检索
+# 🐱 Paper Search
 
 **Find real academic papers across the world's scholarly databases — then read any open-access one in depth. Grounded in real data, never fabricated.**
-
-跨全球学术库检索真实论文，并深度精读任意开放获取 PDF。**有据可查，绝不编造。**
 
 <br>
 
@@ -24,8 +22,6 @@
 
 > ### 🪶 This is the **lite, open-source edition** of [**AcademiCats**](https://academicats.com)
 > The full product at **[academicats.com](https://academicats.com)** is an AI research workbench that takes you from *finding* papers all the way through *reading, writing, and self-review* — with Google Scholar breadth, Chinese-language sources, saved libraries, a polished UI, and a multi-agent reviewer. This skill is a free, self-contained slice of that workflow you can run on your own Claude.
->
-> 这是 [**AcademiCats**](https://academicats.com) 的**开源轻量版**。完整产品在 **academicats.com**——一个从找文献到读、写、自审的 AI 研究工作台。
 
 ---
 
