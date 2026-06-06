@@ -66,7 +66,10 @@ is confirmed.**
 - **Default = search immediately.** If the message already contains a topic
   (e.g. *"find papers on player resonance mechanics, 200"* or *"查论文 …"*),
   search right away — take any params they gave (count, years, sort, open-access)
-  and sensible defaults for the rest (**20 results, all years, best match**).
+  and sensible defaults for the rest (**20 results, all years, best match**). The
+  **20 is only the default for when no count is given** — if the user named a
+  number (40, 100, 200…), honor it exactly and gather that many; never silently
+  shrink the request down to 20.
   After the results, add ONE optional refine line:
   *"Showing 20, all years, best match — say e.g. 'since 2021, open access only'
   to refine."*
@@ -92,15 +95,29 @@ is confirmed.**
 
 ## A3. Retrieve via web browsing (replaces `search_papers.py`)
 
-Use web browsing to query **multiple scholarly sources** and gather the real
-records. Cover as many of these as you can reach:
+**Pull results in BULK from the JSON APIs — do not scrape page-by-page.** Plain
+web search returns only ~10 hits per page and tempts you to stop early at a round
+number; the scholarly APIs return *many* real records in ONE request when you
+pass a count / page-size parameter. **To reliably reach the requested count
+(e.g. 40, 100, 200), fetch a result set at least as large as N** from one or more
+of these JSON endpoints, then merge (replace `<query>` with URL-encoded terms and
+`<N>` with the requested count):
 
-- **OpenAlex** (`openalex.org` / `api.openalex.org`)
-- **Crossref** (`search.crossref.org` / `api.crossref.org`)
-- **arXiv** (`arxiv.org`)
-- **Semantic Scholar** (`semanticscholar.org`)
-- **Europe PMC** (`europepmc.org`)
-- **Google Scholar** (`scholar.google.com`)
+- **OpenAlex** — `https://api.openalex.org/works?search=<query>&per-page=<N>` (per-page up to **200**; add `&filter=from_publication_date:2021-01-01` for a year floor; `&mailto=you@example.com` for the polite pool)
+- **Crossref** — `https://api.crossref.org/works?query=<query>&rows=<N>` (rows up to **1000**)
+- **Semantic Scholar** — `https://api.semanticscholar.org/graph/v1/paper/search?query=<query>&limit=<N>&fields=title,authors,year,venue,citationCount,openAccessPdf,externalIds` (limit up to **100**; paginate with `&offset=` for more)
+- **Europe PMC** — `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=<query>&format=json&pageSize=<N>` (pageSize up to **1000**)
+- **arXiv** — `http://export.arxiv.org/api/query?search_query=all:<query>&max_results=<N>`
+- **Google Scholar** (`scholar.google.com`) — last-resort supplement only (no API; scrape sparingly).
+
+**Over-fetch, then trim.** Set `rows`/`per-page` to **at least ~1.5×N** on the
+first request, so that after de-duplication and dropping off-target hits you
+still have ≥ N papers. **If one source returns fewer than N, query another and
+merge** until you have N distinct papers — or until you've genuinely exhausted
+the real matches. If your retained set falls below N, issue another API call
+(next page via `offset`, larger `rows`, or another source) **before** presenting
+— never let a single page's length, or post-dedup shrinkage, silently become
+your final count.
 
 For each candidate capture: **title, authors, year, venue, citation count, a link
 to the original, whether a free full-text PDF/HTML exists (and its URL), and the
@@ -155,6 +172,12 @@ Markers (keep them verbatim):
 - **🔒** = paywalled (no free full text found)
 
 **Hard output rules (do not override for "helpfulness"):**
+- **Honor the requested count.** If the user asked for N papers, return **N**.
+  Gather them in bulk via the API count / pagination parameters in A3 — do **NOT**
+  stop at a round ~20 (or at one search page's worth) because collecting more is
+  tedious. Return fewer than N **only** when the topic genuinely has fewer real
+  papers, and then state the true total found (e.g. *"only 12 real matches exist
+  for this query"*). "Lazily returning 20" when 50 were asked for is a failure.
 - **Clickable links are mandatory.** Write every title, full-text, PDF, and DOI
   as a real Markdown link with the **full `https://` URL** — `[label](https://…)`
   — inline in your own text. Do **NOT** rely on the browsing tool's citation
