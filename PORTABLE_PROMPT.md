@@ -164,7 +164,10 @@ Markers (keep them verbatim):
   preferred); omit a single link only if you genuinely have no URL for it. Put
   the emoji **inside** the link text — `[📄 Full text](url)`, not `📄 [Full
   text](url)` — so the whole label is one clickable anchor. This is what makes
-  the list clickable on ChatGPT and DeepSeek, like it is on Claude.
+  the list clickable on ChatGPT and DeepSeek, like it is on Claude. If the only
+  URL you have for a paper is its DOI (e.g. a paywalled paper with no distinct
+  full-text/PDF link), show just `[🔗 DOI](…)` — don't repeat the same URL as a
+  separate `📄 Full text` link.
 - **Authors:** if you can't capture the full author list from a clean source,
   show the **first author + *et al.*** — never invent the missing names.
 - **Citation counts:** if you didn't query a structured source (Semantic Scholar
