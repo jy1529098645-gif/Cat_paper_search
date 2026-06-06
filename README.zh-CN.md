@@ -84,6 +84,14 @@ cd ~/.claude/skills/paper-search && python -m pip install -r scripts/requirement
 | 据文献写作、自审稿 | — | ✅ Synthesis Lab + Paper Review |
 | 精致的网页与移动端 | — | ✅ |
 
+## 🌐 在 ChatGPT、DeepSeek 或任意模型上使用
+
+本 skill 在 **Claude**（Claude Code 与 claude.ai）上会自动加载，并直接运行调用学术 API 的 Python 脚本——这是最准确的方式。在别处使用有两条路：
+
+1. **任何能跑 Python+联网的 agent**（Claude Code、Cursor 等）—— clone 仓库，`scripts/` 里的脚本开箱即用，这是完整保真版。
+2. **ChatGPT / DeepSeek 聊天**（无脚本运行环境）—— 用 **[`PORTABLE_PROMPT.md`](PORTABLE_PROMPT.md)** 里基于联网搜索的提示词。贴进 ChatGPT **自定义 GPT** 的 *Instructions*，或作为 DeepSeek 的**系统提示**，然后直接提问检索。
+   - ⚠️ **需要联网**——在 ChatGPT 里开启浏览。没有联网时模型无法查到真实论文；提示词会让它如实说明而不是编造结果。覆盖广度与排序弱于脚本版，但结果始终真实。
+
 ## 🐱 AcademiCats 技能家族
 
 三个开源 skill，串起一条完整的研究工作流——按需安装其一或全部：

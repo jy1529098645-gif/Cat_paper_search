@@ -84,6 +84,14 @@ Restart Claude Code so it loads the skill. From then on, just talk to Claude —
 | Write & self-review from your sources | — | ✅ Synthesis Lab + Paper Review |
 | Polished web & mobile app | — | ✅ |
 
+## 🌐 Use it on ChatGPT, DeepSeek, or any model
+
+This skill loads automatically on **Claude** (Claude Code & claude.ai), where it runs real Python scripts that query scholarly APIs directly — the most accurate path. There are two ways to run it elsewhere:
+
+1. **Any agent that can run Python with internet** (Claude Code, Cursor, …) — clone the repo and the scripts in `scripts/` work as-is. This is the full-fidelity version.
+2. **ChatGPT / DeepSeek chat** (no script runtime) — use the browsing-based prompt in **[`PORTABLE_PROMPT.md`](PORTABLE_PROMPT.md)**. Paste it into a ChatGPT **Custom GPT** (*Instructions*) or as a **system prompt** in DeepSeek, then ask your search.
+   - ⚠️ **Requires web access** — turn on browsing in ChatGPT. Without internet a model cannot look up real papers; the prompt tells it to say so rather than invent results. Coverage and ranking are weaker than the script version, but results stay real.
+
 ## 🐱 The AcademiCats skill family
 
 Three open skills that chain into one research workflow — install any or all:
