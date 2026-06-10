@@ -39,6 +39,10 @@
 
 ## 🎬 演示
 
+<div align="center">
+<img src="assets/paperSearch_large.gif" alt="Paper Search 实际运行" width="100%">
+</div>
+
 一句话说清——主题，外加任何选项：
 
 > *"帮我找 20 篇 2020 年以后关于 CRISPR 脱靶效应的论文。"*

@@ -39,6 +39,10 @@
 
 ## 🎬 Demo
 
+<div align="center">
+<img src="assets/paperSearch_large.gif" alt="Paper Search in action" width="100%">
+</div>
+
 Say it in one line — the topic, plus any options inline:
 
 > *"Find 20 papers on CRISPR off-target effects since 2020."*
