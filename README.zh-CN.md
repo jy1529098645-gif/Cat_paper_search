@@ -28,9 +28,9 @@
 
 ## ✨ 它能做什么
 
-🔍 **真正管用的检索** —— 一次同时查遍五大学术库（OpenAlex、Crossref、arXiv、Semantic Scholar、Europe PMC），自动去重，再按**真实研究契合度**排序——而不是只看关键词重不重合。
+🔍 **真正管用的检索** —— 一次同时查遍五大学术库（OpenAlex、Crossref、arXiv、Semantic Scholar、Europe PMC），自动去重，再按**真实研究契合度**排序——而不是只看关键词重不重合。排序还能自己挑:**最契合**(默认)、**最新**或**被引最多**。
 
-📄 **精读，而非略读** —— 任选一篇开放获取论文，它会解析 PDF、抽取正文，给你一份结构化的精读：研究问题、方法、核心发现、局限 —— 并在原文支持处尽量标注出处页码。
+📄 **精读,而非略读 —— 一篇或一次多篇** —— 搜完它会问你读哪几篇,你可以**一次按编号选多篇**(比如 `1、3、5`),它会逐篇解析 PDF、抽取正文,每篇给一份结构化精读:研究问题、方法、核心发现、局限 —— 并在原文支持处尽量标注出处页码。
 
 🛡️ **不编论文，不编结论** —— 每条结果都是公共 API 的真实记录，每份精读只基于真正抽取到的正文。论文被付费墙挡住时，它会**直说**，绝不杜撰内容。
 
@@ -55,7 +55,7 @@
 > 4. **[A framework study on the use of immersive XR technologies in the cultural heritage domain](https://doi.org/10.1016/j.culher.2023.06.001)** — Chiara Innocente et al. · 2023 · 被引 144 · 🔒
 > 5. **[Wayfinding in Virtual Reality Serious Game: An Exploratory Study in the Context of User Perceived Experiences](https://doi.org/10.3390/app11177822)** — Shafaq Irshad et al. · 2021 · 被引 27 · 🟢 · [PDF](https://www.mdpi.com/2076-3417/11/17/7822/pdf?version=1630052587)
 
-标题直接链接原文；🟢 表示有可读全文的免费 PDF。然后你只要说 **"深读 #1"**——它就打开那篇的 PDF，逐条列出关键发现并标注出处页码，且完全基于论文原文。
+标题直接链接原文;🟢 表示有可读全文的免费 PDF。然后它会问你读哪几篇——你只要说 **"深读 1、3、5"**(想选多少篇都行),它就逐篇打开 PDF、一次性把它们全部读给你,逐条列出关键发现并标注出处页码,且完全基于各自论文的原文。想先看最新或被引最多的?加一句 *"按最新排序"* 或 *"按被引排序"* 即可。
 
 > 每次检索还会把**完整结果**（全部条目、含摘要）写进一个 `search-results.md` 文件——完整列表一定被保存下来，绝不会被截断。
 

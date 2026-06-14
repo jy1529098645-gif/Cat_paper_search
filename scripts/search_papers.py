@@ -429,6 +429,15 @@ def main():
     ap.add_argument("--from-year", type=int, default=None)
     ap.add_argument("--to-year", type=int, default=None)
     ap.add_argument("--open-access-only", action="store_true")
+    ap.add_argument("--sort", choices=["relevance", "recency", "citations"],
+                    default="relevance",
+                    help="Order of the returned list: 'relevance' (default — by "
+                         "the keyword/recency/citation rule_score prior), 'recency' "
+                         "(newest publication year first), or 'citations' (most "
+                         "cited first). rule_score is used as the tie-breaker for "
+                         "recency/citations. Note: regardless of --sort, the "
+                         "rule_score is only a prior — re-rank by research fit "
+                         "before presenting (see references/search.md).")
     ap.add_argument("--sources", default="openalex,crossref,arxiv,s2,europepmc")
     ap.add_argument("--brief", action="store_true",
                     help="Print a compact ranked table instead of full JSON "
@@ -487,7 +496,15 @@ def main():
 
     for p in papers:
         p["rule_score"], p["rule_signals"] = rule_score(p, args.query)
-    papers.sort(key=lambda p: p["rule_score"], reverse=True)
+    # rule_score is always the relevance prior and the tie-breaker; --sort picks
+    # the primary key. recency/citations sort with rule_score breaking ties so
+    # papers missing a year/citation count don't shuffle randomly.
+    if args.sort == "recency":
+        papers.sort(key=lambda p: (p.get("year") or 0, p["rule_score"]), reverse=True)
+    elif args.sort == "citations":
+        papers.sort(key=lambda p: (p.get("citation_count", 0) or 0, p["rule_score"]), reverse=True)
+    else:
+        papers.sort(key=lambda p: p["rule_score"], reverse=True)
     papers = papers[:args.limit]
 
     if errors:

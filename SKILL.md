@@ -2,8 +2,9 @@
 name: paper-search
 description: >-
   Find academic papers and read them — searches real scholarly databases for
-  prior work on a topic, then resolves and deep-reads the open-access PDF of any
-  paper you pick. Use this skill WHENEVER the user wants to discover literature
+  prior work on a topic (orderable by relevance, newest, or most cited), then
+  resolves and deep-reads the open-access PDFs of the papers you pick — one or
+  several at once. Use this skill WHENEVER the user wants to discover literature
   or read a study: "find recent papers on X", "what does the research say about
   Y", "find sources for my thesis on Z", "search for prior work on ...", or
   "summarise / read / extract the findings from this paper / this arXiv id /
@@ -20,8 +21,13 @@ Both are grounded in real data — search hits come from public scholarly APIs,
 and reading reports are built only from the extracted PDF text.
 
 ```
-  search a topic ──▶ ranked real papers ──▶ deep-read the open-access ones
+  search a topic ──▶ ranked real papers ──▶ pick several by number ──▶ deep-read them all at once
 ```
+
+**The default flow is search → deep-read.** As soon as a search finishes,
+prompt the user for which papers to read next, and let them pick **several at
+once** (e.g. "3, 7, 12") — you then deep-read every pick in one batch and return
+all the reports together.
 
 > **Running the scripts:** run them **by their full path from your current
 > working directory — do NOT `cd` into the skill folder.** That way `--save`
@@ -50,12 +56,16 @@ asks what the research says about something.
    > 🔍 **Search setup** — tell me the topic (tweak the rest if you like):
    > 1. **Topic** — `(what should I search?)`
    > 2. **How many papers** — `20`  *(e.g. 10 / 20 / 40)*
-   > 3. **Years** — `any`  ·  4. **Open-access only** — `no`  ·  5. **Sort** — `best match`
+   > 3. **Years** — `any`  ·  4. **Open-access only** — `no`  ·  5. **Sort** — `best match`  *(or `newest` / `most cited`)*
    >
    > Just give me a topic, or adjust any line.
 
    Map choices to flags: count → `--limit`, years → `--from-year` / `--to-year`,
-   open-access → `--open-access-only`, sort → your re-rank preference (step 5).
+   open-access → `--open-access-only`, sort → `--sort relevance|recency|citations`
+   (`best match` → `relevance`, `newest` → `recency`, `most cited` → `citations`).
+   `--sort` sets the script's primary order; you still re-rank by research fit
+   afterwards (step 5) unless the user explicitly asked for strict newest/most-
+   cited order.
 2. For a focused query, search directly. For a broad/exploratory one, first
    expand it into directions and search the best 2–4 query strings (see
    `references/search.md`, Stages 1–3).
@@ -74,6 +84,8 @@ asks what the research says about something.
    #   --brief    : plain table, for your own quick skim
    #   (omit all) : full JSON records with abstracts, for re-ranking / writing
    # filters:  --from-year 2021 --to-year 2026  --open-access-only
+   # sort:     --sort relevance|recency|citations  (default relevance; recency =
+   #           newest first, citations = most cited first — rule_score breaks ties)
    # sources:  --sources openalex,crossref,arxiv,s2,europepmc
    ```
 4. **Present the full numbered list, and hand over the saved file.** Always run
@@ -123,6 +135,18 @@ asks what the research says about something.
    filter. For a very large list where full reordering is impractical, at least
    lead with the strongest hits and flag the obvious off-targets. Papers with
    a `pdf_url` are open-access and can be deep-read by number next.
+6. **Then prompt for deep read — this is the default next step, not an
+   afterthought.** Right after the numbered list, close with ONE clear line
+   inviting a multi-pick, e.g.:
+
+   > 📖 **Want me to deep-read any of these?** Give me the numbers — you can pick
+   > **several at once** (e.g. `3, 7, 12` or `1-5`) and I'll read them all and
+   > return a report for each. (Papers marked 🟢 open-access can be read in full;
+   > the rest I can only summarise from the abstract.)
+
+   When the user replies with numbers (single, list, or range), go straight to
+   **Capability 2 — Deep Read** in batch mode. Don't re-ask or re-confirm each
+   one; resolve the picked papers and read them all.
 
 The script auto-retries Semantic Scholar on rate-limit (HTTP 429), which clears
 most skips. If `s2` still gets skipped a lot, set a free key —
@@ -130,11 +154,43 @@ most skips. If `s2` still gets skipped a lot, set a free key —
 429-ing. Any skipped source is reported on stderr and the rest carry the search.
 Full pipeline in `references/search.md`.
 
-## Capability 2 — Deep Read
+## Capability 2 — Deep Read (one paper or many at once)
 
-**When:** the user wants to actually read, summarise, or extract findings from a
-specific paper (by title, DOI, arXiv id, or URL) — including one they just found
-in a search.
+**When:** the user wants to actually read, summarise, or extract findings from
+papers — one specific paper, or **several picked by number from a search**. The
+common path is: they ran a search, then replied with picks like `3, 7, 12` or
+`1-5`.
+
+### Batch mode (the default after a search)
+
+When the user picks **more than one** paper:
+
+1. **Resolve each pick to its best identifier** from the saved search results —
+   prefer DOI or arXiv id over title (more reliable). Skip any pick with no
+   `pdf_url` only if the user wanted full-text; otherwise note it can only be
+   summarised from its abstract.
+2. **Fetch all picked PDFs in parallel** — issue one `fetch_pdf.py` call per
+   paper in a single batch of tool calls (they're independent), so the user
+   doesn't wait for them serially:
+
+   ```bash
+   python scripts/fetch_pdf.py --doi 10.1145/3313831.3376234 --text-only
+   python scripts/fetch_pdf.py --arxiv 1706.03762 --text-only
+   # …one call per picked paper, run together
+   ```
+3. **Produce one reading report per paper** using the prompt in
+   `references/deep_read.md`, each grounded only in that paper's extracted text.
+   Keep them in the **same order the user picked**, each headed by its number +
+   title so they map back to the list. For any paper whose PDF wouldn't resolve,
+   say so plainly under its heading and offer the abstract — don't skip silently
+   and don't fabricate.
+4. **Don't re-ask between papers.** Read every pick, then deliver all reports in
+   one response. After them, optionally offer a short cross-paper comparison or
+   to hand the claims to a writing task.
+
+### Single-paper mode
+
+When the user names just one paper (by title, DOI, arXiv id, or URL):
 
 1. Resolve and extract the PDF (tries direct URL → arXiv-by-DOI → Unpaywall →
    OpenAlex → Semantic Scholar):

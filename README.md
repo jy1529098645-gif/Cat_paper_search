@@ -28,9 +28,9 @@
 
 ## ✨ What it does
 
-🔍 **Search that means it** — one question searches five scholarly databases at once (OpenAlex, Crossref, arXiv, Semantic Scholar, Europe PMC), de-duplicates, and ranks by genuine research fit — not just keyword overlap.
+🔍 **Search that means it** — one question searches five scholarly databases at once (OpenAlex, Crossref, arXiv, Semantic Scholar, Europe PMC), de-duplicates, and ranks by genuine research fit — not just keyword overlap. Order it your way: **best match** (default), **newest**, or **most cited**.
 
-📄 **Read, not skim** — pick any open-access paper and it resolves the PDF, extracts the text, and gives you a structured reading — research question, method, key findings, and limitations — with page references where the source supports them.
+📄 **Read, not skim — one paper or many at once** — after a search it asks which to read; pick **several by number** (e.g. `1, 3, 5`) and it resolves each PDF, extracts the text, and gives you a structured reading per paper — research question, method, key findings, and limitations — with page references where the source supports them.
 
 🛡️ **No made-up papers, no made-up findings** — every result is a real record from a public API, and every reading is built only from the actual extracted text. When a paper is paywalled, it says so — it never invents the contents.
 
@@ -55,7 +55,7 @@ It runs right away — no forms, no back-and-forth — and returns a **numbered 
 > 4. **[A framework study on the use of immersive XR technologies in the cultural heritage domain](https://doi.org/10.1016/j.culher.2023.06.001)** — Chiara Innocente et al. · 2023 · cited 144 · 🔒
 > 5. **[Wayfinding in Virtual Reality Serious Game: An Exploratory Study in the Context of User Perceived Experiences](https://doi.org/10.3390/app11177822)** — Shafaq Irshad et al. · 2021 · cited 27 · 🟢 · [PDF](https://www.mdpi.com/2076-3417/11/17/7822/pdf?version=1630052587)
 
-Every title links straight to the paper; 🟢 means a free PDF you can read in full. Then just say **"deep-read #1"** — it opens that paper's PDF and reads it back to you with findings tied to page numbers, grounded entirely in the paper's own text.
+Every title links straight to the paper; 🟢 means a free PDF you can read in full. Then it asks which ones to read — say **"deep-read 1, 3, 5"** (pick as many as you like) and it opens each paper's PDF and reads them all back to you with findings tied to page numbers, grounded entirely in each paper's own text. Want the newest or most-cited first instead? Just add *"sorted by newest"* or *"most cited"*.
 
 > Every search also saves the **complete list** (all results, with abstracts) to a `search-results.md` file — so the full set is always captured, never cut off.
 

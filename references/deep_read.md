@@ -1,9 +1,16 @@
-# Reference: Deep Read (single-paper analysis)
+# Reference: Deep Read (per-paper analysis)
 
 You run `scripts/fetch_pdf.py` to resolve an open-access PDF and extract its
 text, then produce an evidence-aware reading report from the extracted text
 **only**. The cardinal rule: never add facts from your own memory of the paper
 — if the excerpt doesn't contain it, say so.
+
+**Batch reads:** the analysis below is per paper, but the usual trigger is a user
+picking several papers by number after a search (e.g. `3, 7, 12`). In that case
+fetch all the PDFs in parallel (one `fetch_pdf.py` call each, run together), then
+apply the report prompt below to each paper's text independently and present the
+reports in the order the user picked, each headed by its number + title. Don't
+re-confirm between papers; read them all and deliver the reports together.
 
 ## Flow
 
